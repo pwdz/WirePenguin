@@ -14,6 +14,7 @@ import (
 	"github.com/google/gopacket/pcapgo"
 	// "github.com/pwdz/WirePenguin/utils/filehandler"
 	"github.com/pwdz/WirePenguin/pkg/filehandler"
+	"github.com/pwdz/WirePenguin/pkg/report"
 )
 const(
 	snapshotLen int32 = 65535
@@ -26,11 +27,16 @@ var (
 
 	tcpCount, udpCount, icmpCount, ipv4Count, ipv6count, dnsCount, armCount int
 	ipPacket map[string]int
+	ipFragments map[uint16]int
 	fragmentCount int
-	minPacketSize, maxPacketSize, averageSize int
+	minPacketSize, maxPacketSize uint16
+	totalPacketsCount int
+	totalPacketsLength uint64
 
 	writer *pcapgo.Writer
 	pcapFile *os.File
+
+	shouldContinue bool
 )
 func RunConsole(){
 	fmt.Println("[$] Starting Console...")
@@ -43,7 +49,7 @@ func RunConsole(){
 		cmdStr = strings.Trim(cmdStr, "\n\r ")
 
 		if cmdStr == "exit"{
-
+			shouldContinue = false
 		}
 	}
 }
@@ -56,9 +62,14 @@ func clearCounters(){
 	armCount = 0
 	ipv4Count = 0
 	ipv6count = 0
-	minPacketSize = 10000000
-	maxPacketSize = -1
+	totalPacketsLength = 0
+	totalPacketsCount = 0
+	minPacketSize = 65535
+	maxPacketSize = 0
 	ipPacket = make(map[string]int)
+
+	ipFragments = make(map[uint16]int)
+	shouldContinue = true
 }
 func OpenOffline(filePath string, maxPacket int, report bool, tcp, udp, ipv4, ipv6, dns, icmp, layers, showPacket bool) error{
 	handle, err := pcap.OpenOffline(filePath)
@@ -68,7 +79,7 @@ func OpenOffline(filePath string, maxPacket int, report bool, tcp, udp, ipv4, ip
 	}
 	defer handle.Close()
 
-	return ReadPackets(handle, maxPacket,"",tcp, udp, ipv4, ipv6, dns, icmp, layers, showPacket)
+	return ReadPackets(handle, maxPacket,"",report,tcp, udp, ipv4, ipv6, dns, icmp, layers, showPacket)
 }
 func CaptureLive(deviceName, pcapPath string, maxPacket int, report bool,tcp, udp, ipv4, ipv6, dns, icmp, layers, showPacket bool) error{
 
@@ -79,9 +90,10 @@ func CaptureLive(deviceName, pcapPath string, maxPacket int, report bool,tcp, ud
 	}
 	defer handle.Close()
 
-	return ReadPackets(handle, maxPacket, pcapPath,tcp, udp, ipv4, ipv6, dns, icmp, layers, showPacket)
+	return ReadPackets(handle, maxPacket, pcapPath, report, tcp, udp, ipv4, ipv6, dns, icmp, layers, showPacket)
 }
-func ReadPackets(handle *pcap.Handle, maxPacket int, pcapOut string ,tcp, udp, ipv4, ipv6, dns, icmp, layers, showPacket bool) error{
+func ReadPackets(handle *pcap.Handle, maxPacket int, pcapOut string , needReport, tcp, udp, ipv4, ipv6, dns, icmp, layers, showPacket bool) error{
+	go RunConsole()
 	clearCounters();
 	if pcapOut != ""{
 		writer, pcapFile, _ = filehandler.InitFile(pcapOut)
@@ -122,10 +134,17 @@ func ReadPackets(handle *pcap.Handle, maxPacket int, pcapOut string ,tcp, udp, i
 				break
 			}
 		}
+		if !shouldContinue{
+			break
+		}
 		
 	}
 
 	defer pcapFile.Close()
+
+	if needReport{
+		report.Report(maxPacketSize, minPacketSize, totalPacketsLength, totalPacketsCount, ipFragments, ipPacket, icmpCount, tcpCount, udpCount)
+	}
 	return nil
 }
 func checkIPv4(packet gopacket.Packet){
@@ -139,6 +158,22 @@ func checkIPv4(packet gopacket.Packet){
 			ipPacket[ip.SrcIP.String()] = 1
 		}else{
 			ipPacket[ip.SrcIP.String()] = value + 1
+		}
+
+		if ip.Length > maxPacketSize{
+			maxPacketSize = ip.Length
+		}
+
+		if ip.Length < minPacketSize {
+			minPacketSize = ip.Length
+		}
+		totalPacketsLength += uint64(ip.Length)
+		totalPacketsCount++;
+
+		if (ip.FragOffset == 0 && ip.Flags == layers.IPv4MoreFragments) || ip.FragOffset > 0 {
+			if _, ok := ipFragments[ip.Id]; !ok{
+				ipFragments[ip.Id] = 1
+			}
 		}
 
 		
