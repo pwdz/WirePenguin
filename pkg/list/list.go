@@ -1,7 +1,6 @@
 package list
 
 import (
-	// "github.com/google/gopacket"
 	"fmt"
 	"log"
 
@@ -22,6 +21,5 @@ func ListDevices() {
 		// fmt.Println("Flags:", dev.Flags)
 		fmt.Println("================================================")
 	}
-
 
 }
