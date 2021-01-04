@@ -15,36 +15,103 @@
 package cmd
 
 import (
-	"fmt"
-
+	// "fmt"
+	"log"
+	"strings"
+	
+	"github.com/pwdz/WirePenguin/pkg/sniffer"
 	"github.com/spf13/cobra"
 )
 
 // captureCmd represents the capture command
 var captureCmd = &cobra.Command{
 	Use:   "capture",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "TODO",
+	Long: `TODO`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("capture called")
+		
+		device, err := cmd.Flags().GetString("interface")
+		if err != nil{
+			log.Fatal(err)
+			return
+		}
+		
+		pcapOutPath, err := cmd.Flags().GetString("output")
+		if err != nil{
+			log.Fatal(err)
+			return
+		}
+
+		filter, err := cmd.Flags().GetString("filter")
+		if err != nil{
+			log.Fatal(err)
+			return
+		}
+	
+		num, err := cmd.Flags().GetInt("num")
+		if err != nil{
+			log.Fatal(err)
+			return
+		}
+		
+		report, err := cmd.Flags().GetBool("report")
+		if err != nil{
+			log.Fatal(err)
+			return
+		}
+		var tcp, udp, ipv4, ipv6, dns, icmp, layers, showPacket bool
+		parseFilters(filter, &tcp, &udp, &ipv4, &ipv6, &dns, &icmp, &layers, &showPacket)
+		
+		sniffer.CaptureLive(device, pcapOutPath, num, report, 
+		tcp, udp, ipv4, ipv6, dns, icmp, layers, showPacket)
+		// sniffer.RunConsole(task)
 	},
+}
+func parseFilters(filter string, tcp, udp, ipv4, ipv6, dns, icmp, layers, showPacket *bool){
+	filter = strings.ToLower(filter)
+	if strings.Contains(filter, "tcp"){
+		*tcp = true
+	}
+	if strings.Contains(filter, "udp"){
+		*udp = true
+	}
+	if strings.Contains(filter, "ipv4"){
+		*ipv4 = true
+	}
+	if strings.Contains(filter, "ipv6"){
+		*ipv6 = true
+	}
+	if strings.Contains(filter, "dns"){
+		*dns = true
+	}
+	if strings.Contains(filter, "icmp"){
+		*icmp = true
+	}
+	if strings.Contains(filter, "layers"){
+		*layers = true
+	}
+	if strings.Contains(filter, "packet"){
+		*showPacket = true
+	}
+	if strings.Contains(filter, "all"){
+		*tcp = true
+		*udp = true
+		*ipv4 = true
+		*ipv6 = true
+		*dns = true
+		*icmp = true
+		*layers = true
+		*showPacket = true
+	}
 }
 
 func init() {
 	RootCmd.AddCommand(captureCmd)
 
-	// Here you will define your flags and configuration settings.
+	captureCmd.Flags().StringP("interface", "i", "", "Network interface")
+	captureCmd.Flags().StringP("output", "o", "", "save capture results in path/file.pcap")
+	captureCmd.Flags().StringP("filter", "f", "", "wanted layers, for exp: TCP, UDP, ...")
+	captureCmd.Flags().BoolP("report", "r", false, "want report")
 
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// captureCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// captureCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	captureCmd.Flags().IntP("num","n",-1,"Maximum number of packets to capture")
 }
