@@ -5,13 +5,13 @@ It can open `.pcap` files and save captured packets in `.pcap` files. Also the a
 
 ## Commands  
 
-###list
+### list  
 Lists all available network devices  
 ```
 WirePenguin list
 ```  
 
-###capture  
+### capture  
 ```
 WirePenguin capture -i/--interface interfaceName -f/--filter filters
 ```  
@@ -31,7 +31,7 @@ WirePenguin capture -i/--interface interfaceName -f/--filter filters
 ***-n, --num (optional)***    
         Maximum number of packets you wanna capture.  
           
-###open  
+### open  
 ```
 WirePenguin open filePath/filename.pcap -f/--filter filters
 ```  
