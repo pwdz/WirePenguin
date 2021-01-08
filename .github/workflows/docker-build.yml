@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Install .sh
-      run: $(pwd)/.github/workflows/github.install.sh
+      run: ./.github/workflows/github.install.sh
 
     - uses: actions/checkout@v2
     - name: Build Docker Image
