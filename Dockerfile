@@ -26,6 +26,7 @@ COPY go.mod .
 COPY go.sum .
 
 RUN go mod download
+RUN apt-get update && apt-get install -y git
 RUN  apt-get install libpcap-dev
 
 COPY . .
