@@ -11,7 +11,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Install .sh
-      run: $(pwd)/.github/workflows/github.install.sh
+      run: chmod +x $(pwd)/.github/workflows/github.install.sh && $(pwd)/.github/workflows/github.install.sh 
 
     - name: Build Docker Image
       run: docker build . --tag my-image-name:$(date +%s)
