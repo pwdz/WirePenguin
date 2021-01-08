@@ -1,9 +1,5 @@
 name: Build Docker Image
 
-env:
-  - GO111MODULE=on
-
-
 on:
   push:
     branches:
@@ -13,6 +9,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+    - name: Install .sh
+      run: $(pwd) #github.install.sh
+
     - uses: actions/checkout@v2
     - name: Build Docker Image
       run: docker build . --tag my-image-name:$(date +%s)
