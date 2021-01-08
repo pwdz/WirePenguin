@@ -2,12 +2,15 @@
 # WirePenguin
 A CLI Packet Sniffer in golang using [Cobra](https://github.com/spf13/cobra) and [Gopacket](https://github.com/google/gopacket) packages much much simpler than WireShark =)  
 It can open `.pcap` files and save captured packets in `.pcap` files. Also the available layers can be specified and etc.  
+
 ## Commands  
+
 ###list
 Lists all available network devices  
 ```
 WirePenguin list
 ```  
+
 ###capture  
 ```
 WirePenguin capture -i/--interface interfaceName -f/--filter filters
