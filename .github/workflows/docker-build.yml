@@ -1,13 +1,5 @@
 name: Build Docker Image
 
-addons:
-  apt:
-    packages:
-      libpcap-dev
-
-# use modules except for older versions (see below)
-install: true
-
 env:
   - GO111MODULE=on
 
