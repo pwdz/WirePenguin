@@ -15,7 +15,7 @@ WirePenguin list
 ```
 WirePenguin capture -i/--interface interfaceName -f/--filter filters
 ```  
-`interfaceName` is one the network interfaces    
+`interfaceName` is one of the network interfaces    
 **Flags**  
 ***-o, --output***   
         Save captured packets in a `.pcap` file. Specify filePath/filname.pcap after flag.    
